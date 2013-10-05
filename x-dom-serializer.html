@@ -53,6 +53,9 @@ license that can be found in the LICENSE file.
           if (n == 'textContent') {
             return;
           }
+          if (node.publish && node.publish[n] === undefined) {
+            return;
+          }
           if (binding) {
             v = '{{ ' + binding + ' }}';
           } else if (!((v || v === 0) && (typeof v === 'string' || typeof v === 'number' ||
@@ -96,7 +99,7 @@ license that can be found in the LICENSE file.
       elementBlackList: ['style'],
       propertyBlackList: null,
       created: function() {
-        var node = document.createElement('tk-dumper-blacklist');
+        var node = document.createElement('x-serializer-blacklist');
         this.propertyBlackList = Object.keys(node.__proto__);
       },
       dumpElement: function(node, indent) {
@@ -220,5 +223,5 @@ license that can be found in the LICENSE file.
   </script>
 </polymer-element>
 
-<!-- this element exists to generate a property black list for tk-element -->
-<polymer-element name="tk-dumper-blacklist" noscript></polymer-element>
+<!-- this element exists to generate a property black list for polymer-element -->
+<polymer-element name="x-serializer-blacklist" noscript></polymer-element>
