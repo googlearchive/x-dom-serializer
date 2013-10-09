@@ -3,7 +3,7 @@ Copyright 2013 The Polymer Authors. All rights reserved.
 Use of this source code is governed by a BSD-style
 license that can be found in the LICENSE file.
 -->
-<script src="binding.js"></script>
+<link rel="import" href="../binding.html"></link>
 
 <polymer-element name="x-serializer">
   <script>
@@ -26,7 +26,7 @@ license that can be found in the LICENSE file.
           }
         })
         html += '>';
-        var end = '</' + node.localName + '>\n';
+        var end = {input: 1}[node.localName] ? '\n' : '</' + node.localName + '>\n';
         if (node.meta && node.meta.hideSubtree) {
           html += end;
         } else {
@@ -105,24 +105,30 @@ license that can be found in the LICENSE file.
       dumpElement: function(node, indent) {
         indent = indent || '';
         var name = ''; //node.elementAttributes.name || '';
+        //
         // resolve properties to attributes before dumping
         //var proto = this.dumpProto(node, indent + this.tab + this.tab);
         //var script = 'Polymer(\'' + name +'\', ' + proto + ');';
-        var html = indent + '<polymer-element' + this.dumpElementAttributes(node) +
-          '>\n' + indent + this.tab + '<template>\n';
+        //
+        var html = ''
+        //html += indent + '<polymer-element' + this.dumpElementAttributes(node) +
+        //  '>\n' + indent + this.tab + '<template>\n';
+        //
         //html += indent + this.dumpStyle(node, indent + this.tab + this.tab);
+        var childIndent = indent; // + this.tab + this.tab;
         var children = '';
         Array.prototype.forEach.call(node.children, function(c) {
           if (this.elementBlackList.indexOf(c.localName) < 0) {
-            children += this.dumpTag(c, indent + this.tab + this.tab);
+            children += this.dumpTag(c, childIndent);
           }
         }, this);
-        html += children || (indent + this.tab + this.tab + '\n');
-        html += indent + this.tab + '</template>\n' +
+        html += children || (childIndent + '\n');
+        //
+        //html += indent + this.tab + '</template>\n' +
           //indent + this.tab +'<script>\n' +
           //indent + this.tab + this.tab + script + '\n' +
           //indent + this.tab +'</s' + 'cript>\n'+
-          indent + '</polymer-element>';
+          //indent + '</polymer-element>';
         return html;
       },
       dumpElementAttributes: function(node) {
