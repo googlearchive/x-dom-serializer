@@ -98,7 +98,7 @@ license that can be found in the LICENSE file.
     Polymer('x-dom-serializer', {
       elementBlackList: ['style'],
       propertyBlackList: null,
-      created: function() {
+      ready: function() {
         var node = document.createElement('x-serializer-blacklist');
         this.propertyBlackList = Object.keys(node.__proto__);
       },
