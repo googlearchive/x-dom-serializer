@@ -12,10 +12,10 @@ license that can be found in the LICENSE file.
       tab: '  ',
       dumpTag: function(node, indent) {
         if (node.dumpTag) {
-          return node.dumpTag(this.dumpTab, indent, TAB);
+          return node.dumpTag(this.dumpTab, indent, this.tab);
         }
         if (node.nodeType == Node.TEXT_NODE) {
-          return this.dumpTextNode(node);
+          return this.dumpTextNode(node, indent);
         }
         var html = '';
         html += indent + '<' + node.localName;
@@ -31,8 +31,9 @@ license that can be found in the LICENSE file.
         if (node.meta && node.meta.hideSubtree) {
           html += end;
         } else {
-          if (node.firstElementChild) {
-            Array.prototype.forEach.call(node.children, function(c, i) {
+          var root = node.content || node;
+          if (root.firstElementChild) {
+            Array.prototype.forEach.call(root.children, function(c, i) {
               if (i == 0) {
                 html += '\n';
               }
@@ -40,8 +41,8 @@ license that can be found in the LICENSE file.
             }, this);
             html += indent + end;
           } else {
-            html += node.firstChild ? this.dumpTextNode(node.firstChild) + end
-              : end;
+            html += root.firstChild ? this.dumpTextNode(root.firstChild, indent)
+               + end : end;
           }
         }
         return html;
@@ -97,7 +98,8 @@ license that can be found in the LICENSE file.
 <polymer-element name="x-dom-serializer" extends="x-serializer">
   <script>
     Polymer('x-dom-serializer', {
-      elementBlackList: ['style'],
+      //elementBlackList: ['style'],
+      elementBlackList: [],
       propertyBlackList: null,
       ready: function() {
         var node = document.createElement('x-serializer-blacklist');
@@ -132,6 +134,14 @@ license that can be found in the LICENSE file.
           //indent + '</polymer-element>';
         return html;
       },
+      dumpTextNode: function(node, indent) {
+        if (node.parentNode.localName === 'style') {
+          var style = node.parentNode;
+          return this.cssTextFromSheet(style, style.sheet, indent);
+        } else {
+          return this.super(arguments);
+        }
+      },
       dumpElementAttributes: function(node) {
         var html = '';
         if (node.elementAttributes) {
@@ -163,6 +173,7 @@ license that can be found in the LICENSE file.
         dump += '\n' + indent + '}';
         return dump;
       },
+      /*
       dumpStyle: function(node, startIndent) {
         var css = startIndent + '<style>\n';
         var style = node.querySelector('style');
@@ -199,31 +210,38 @@ license that can be found in the LICENSE file.
         css += startIndent + '</style>\n';
         return css;
       },
+      */
       cssTextFromSheet: function(node, sheet, indent) {
         if (sheet) {
           var rules = sheet.cssRules;
-          for (var i=0, css=[]; i < rules.length; i++) {
+          var css = [indent];
+          for (var i=0, r; i < rules.length; i++) {
             if (!(this.ignoreSelector(node, rules[i].selectorText))) {
-              css.push(this.dumpRule(rules[i], indent + this.tab));
+              r = this.dumpRule(rules[i], indent + this.tab);
+              if (r) {
+                css.push(r);
+              }
             }
           }
-          return css.join('');
+          css.push('');
+          return css.join('\n');
         }
+        return '';
       },
       // ignore id selectors
       ignoreSelector: function (node, selector) {
-        return selector.match(/^#[^, ]*$/) && node.querySelector(selector);
+        //return selector.match(/^#[^, ]*$/) && node.querySelector(selector);
       },
       dumpRule: function(rule, indent) {
+        if (!rule.style.cssText) {
+          return null;
+        }
         indent = indent || '';
         // format
-        var css = rule.cssText
-          .replace(/{ /g, '{')
-          .replace(/; /g, ';')
-          .replace(/(^.*{)/g, indent + '$&\n' + indent + this.tab)
-          .replace(/;/g, ';\n' + indent + this.tab)
-          .replace(new RegExp(indent + this.tab + '}', 'g'), indent + '}\n')
-          .replace(/\n[^;]*:[^;]*initial[^;]*;/g, '');
+        var css = indent + rule.selectorText + ' {\n' +
+            rule.style.cssText.replace(/([^;]*);\s*:?/g, indent + this.tab + 
+            '$1;\n') + 
+            indent + '}';
         return css;
       }
     });
