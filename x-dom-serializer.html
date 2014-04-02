@@ -10,6 +10,7 @@ license that can be found in the LICENSE file.
   <script>
     Polymer('x-serializer', {
       tab: '  ',
+      attributesBlacklist: ['style', 'tabindex', 'role'],
       dumpTag: function(node, indent) {
         if (node.dumpTag) {
           return node.dumpTag(this.dumpTab, indent, this.tab);
@@ -23,7 +24,8 @@ license that can be found in the LICENSE file.
         Object.keys(attributes).forEach(function(k) {
           var v = attributes[k];
           if (v !== null && v !== undefined) {
-            html += ' ' + k + (v !== '' ? '="' + v + '"': '');
+            var sep = typeof v === 'string' && v.indexOf('"') >= 0 ? '\'' : '"';
+            html += ' ' + k + (v !== '' ? '=' + sep + v + sep: '');
           }
         })
         html += '>';
@@ -79,7 +81,11 @@ license that can be found in the LICENSE file.
       },
       // special handling for certain attributes: style, class
       filterAttributes: function(attributes) {
-        attributes.style = null;
+        for (var i in attributes) {
+          if (this.attributesBlacklist.indexOf(i) >= 0 || i.match(/^aria/)) {
+            attributes[i] = null;
+          }
+        }
         var v = attributes['class'];
         v = v ? v.replace(/selected-element/g, '') : null;
         if (v && (v.trim() == 'selected')) {
