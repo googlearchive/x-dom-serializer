@@ -24,6 +24,7 @@ license that can be found in the LICENSE file.
         Object.keys(attributes).forEach(function(k) {
           var v = attributes[k];
           if (v !== null && v !== undefined) {
+            // json properties can contain " so surround them with '
             var sep = typeof v === 'string' && v.indexOf('"') >= 0 ? '\'' : '"';
             html += ' ' + k + (v !== '' ? '=' + sep + v + sep: '');
           }
